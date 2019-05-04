@@ -74,7 +74,6 @@ def delete_Gorod(NameGorod):
 
 
 
-
 # Функции для работы с таблицей Судей
 def input_Sudiya():
     # for g in Gorod.select():
@@ -106,7 +105,7 @@ db.connect()
 db.create_tables([Gorod, Sudiya, Komanda], safe=True)
 
 # delete_Sudiya('')
-# delete_Gorod('')
+delete_Gorod('Душанбе')
 # delete_Komanda('')
 
 # input_Gorod()
