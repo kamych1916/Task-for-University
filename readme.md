@@ -3,7 +3,7 @@
 
 Mataruev Ilya and Rakhimov Kamol
 
-We are using Flask web-framework in back-end, and Vue/Vuetify in front-end 
+We are using Flask web-framework in back-end, and Vue/Vuetify in front-end
 For creating database and manipulate him, we using ORM - peewee
 
 
