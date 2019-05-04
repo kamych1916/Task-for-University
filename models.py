@@ -17,6 +17,12 @@ class Komanda(BaseModel):
     Naimenovanie = CharField(unique=True)
     NameGorodKom = ForeignKeyField(Gorod, field='Nazvanie')
 
+class Admin(BaseModel):
+    Login = CharField(unique=True)
+    Password = CharField()
+
+
+
 
 goroda = [
     {
@@ -63,8 +69,19 @@ komandi = [
     }
 ]
 
+admins = [
+    {
+      'LoginAdmin': 'Kamol',
+      'PasswordAdmin': 'qwerty'
+    }
 
-# Функции для работы с таблицей Городов
+]
+
+
+
+
+
+# Функция для работы с таблицей Городов
 def input_Gorod():
     for g in goroda:
         Gorod.create(Nazvanie=g['NameGorod'])
@@ -74,7 +91,7 @@ def delete_Gorod(NameGorod):
 
 
 
-# Функции для работы с таблицей Судей
+# Функция для работы с таблицей Судей
 def input_Sudiya():
     # for g in Gorod.select():
     #     for s in sudii:
@@ -91,8 +108,7 @@ def delete_Sudiya(NameSudiya):
 
 
 
-
-# Функции для работы с таблицей Команд
+# Функция для работы с таблицей Команд
 def input_Komanda():
     for k in komandi:
         Komanda.create(Naimenovanie=k['NamimenKom'], NameGorodKom=k['NGK'])
@@ -101,13 +117,30 @@ def delete_Komanda(NameKomanda):
     Komanda.delete().where(Komanda.Naimenovanie == NameKomanda).execute()
 
 
+
+# Функция для работы с таблицей Городов
+def input_Admin():
+    for a in admins:
+        Admin.create(Login=a['LoginAdmin'], Password=a['PasswordAdmin'])
+
+def delete_Admin(NameAdmin):
+    Admin.delete().where(Admin.Login == NameAdmin).execute()
+
+
+
+
+
+
+
 db.connect()
-db.create_tables([Gorod, Sudiya, Komanda], safe=True)
+db.create_tables([Gorod, Sudiya, Komanda, Admin], safe=True)
 
 # delete_Sudiya('')
 # delete_Gorod('')
 # delete_Komanda('')
 
+
 # input_Gorod()
 # input_Sudiya()
 # input_Komanda()
+# input_Admin()
