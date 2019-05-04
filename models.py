@@ -63,6 +63,7 @@ komandi = [
     }
 ]
 
+
 # Функции для работы с таблицей Городов
 def input_Gorod():
     for g in goroda:
@@ -88,7 +89,6 @@ def input_Sudiya():
 
 def delete_Sudiya(NameSudiya):
     Sudiya.delete().where(Sudiya.Name == NameSudiya).execute()
-
 
 
 
