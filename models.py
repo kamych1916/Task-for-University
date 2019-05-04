@@ -107,6 +107,7 @@ db.create_tables([Gorod, Sudiya, Komanda], safe=True)
 # delete_Sudiya('')
 # delete_Gorod('')
 # delete_Komanda('')
+
 # input_Gorod()
 # input_Sudiya()
 # input_Komanda()
