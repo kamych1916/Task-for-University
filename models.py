@@ -1,5 +1,4 @@
 from peewee import *
-import json
 
 db = SqliteDatabase('Chempionat.db')
 db.connect()
@@ -34,110 +33,36 @@ class Admin(BaseModel):
     Password = CharField()
 
 
-goroda = [
-    {
-      'NameGorod': 'Москва'
-    },
-    {
-      'NameGorod': 'Питер'
-    },
-    {
-      'NameGorod': 'Ярославль'
-    },
-    {
-      'NameGorod': 'Казань'
-    }
-]
-
-sudii = [
-    {
-      'NameSudiya': 'Игорь',
-      'NGS': 'Казань'
-    },
-    {
-      'NameSudiya': 'Виктор',
-      'NGS': 'Москва'
-    }
-]
-
-komandi = [
-    {
-      'NamimenKom': 'ЦСКА',
-      'NGK': 'Москва'
-    },
-    {
-      'NamimenKom': 'УНИКС',
-      'NGK': 'Питер'
-    },
-    {
-      'NamimenKom': 'АЛЬБА',
-      'NGK': 'Казань'
-    },
-    {
-      'NamimenKom': 'Валенсия',
-      'NGK': 'Ярославль'
-    }
-]
-
-admins = [
-    {
-      'LoginAdmin': 'Kamol',
-      'PasswordAdmin': 'qwerty'
-    }
-
-]
-
-
-
-
 # Функция для работы с таблицей Городов
-def input_Gorod():
-    for g in goroda:
-        Gorod.create(Nazvanie=g['NameGorod'])
+def input_Gorod(kek):
+    Gorod.create(Nazvanie=kek)
 
 def delete_Gorod(NameGorod):
     Gorod.delete().where(Gorod.Nazvanie == NameGorod).execute()
 
 
-
 # Функция для работы с таблицей Судей
-def input_Sudiya():
-    # for g in Gorod.select():
-    #     for s in sudii:
-    #         if g.Nazvanie == s['NGS']:
-    #             print(s)
-    #             Sudiya.create(Name=s['NameSudiya'], NameGorodSud=s['NGS'])
-    #         else:
-    #             print('error Gorod')
-    for s in sudii:
-        Sudiya.create(Name=s['NameSudiya'], NameGorodSud=s['NGS'])
+def input_Sudiya(NameSudiya):
+    Sudiya.create(Name= NameSudiya, NameGorodSud=NameSudiya)
 
 def delete_Sudiya(NameSudiya):
     Sudiya.delete().where(Sudiya.Name == NameSudiya).execute()
 
 
-
 # Функция для работы с таблицей Команд
-def input_Komanda():
-    for k in komandi:
-        Komanda.create(Naimenovanie=k['NamimenKom'], NameGorodKom=k['NGK'])
+def input_Komanda(NameKomanda):
+     Komanda.create(Naimenovanie= NameKomanda, NameGorodKom=NameKomanda)
 
 def delete_Komanda(NameKomanda):
     Komanda.delete().where(Komanda.Naimenovanie == NameKomanda).execute()
 
 
-
 # Функция для работы с таблицей Городов
-def input_Admin():
-    for a in admins:
-        Admin.create(Login=a['LoginAdmin'], Password=a['PasswordAdmin'])
+def input_Admin(NameAdmin, PassAdmin):
+    Admin.create(Login=NameAdmin, Password=PassAdmin)
 
 def delete_Admin(NameAdmin):
     Admin.delete().where(Admin.Login == NameAdmin).execute()
-
-
-# for k in Match.select():
-#     print(k.DateMatch)
 
 
 # Функция для работы с таблицей Команд
@@ -157,22 +82,12 @@ def input_Match():
         NameKomandaHozMatch='УНИКС',
         NameKomandaGosMatch='Валенсия',
         NameSudiaMatch='Сергей',
-        DateMatch='29-04.2019',
+        DateMatch='22-08-2019',
         ResultHozMatch=0,
         ResultGosMatch=0,
-        StatusMatch='Не завершен'
+        StatusMatch='Не Завершен, Исключен Судья Матча, Возможна Замена Судьи'
     )
 
-# def delete_Match(NameMatch):
-#     Komanda.delete().where(Komanda.Naimenovanie == NameKomanda).execute()
-
-
-    # NameGorodMatch = ForeignKeyField(Gorod, field='Nazvanie')
-    # NameKomandaMatch = ForeignKeyField(Komanda, field='Naimenovanie')
-    # NameSudiaMatch = ForeignKeyField(Sudiya, field='Name')
-    # ResultHozMatch = IntegerField()
-    # ResultGosMatch = IntegerField()
-    # StatusMatch = CharField()
 
 db.create_tables([Gorod, Sudiya, Komanda, Match, Admin], safe=True)
 
@@ -180,14 +95,75 @@ db.create_tables([Gorod, Sudiya, Komanda, Match, Admin], safe=True)
 # delete_Gorod('')
 # delete_Komanda('')
 
-# LOL = Match.select().where(Match.id == 2).get()
-#
-# if LOL.StatusMatch == 'Завершен':
-#     Match.update(StatusMatch='Не завершен').where(Match.id == 2).execute()
+# Match.delete().where(Match.id == 8).execute()
 
 
-# Komanda.update(Naimenovanie='ЦСКА').where(Komanda.id == 1).execute()
+# kek = Match.select().group_by(Match).having(Match.StatusMatch == 'Завершен')
+# print(kek)
+
+# kik = Match.select().group_by(Match.NameKomandaHozMatch)
+# print(kik)
+
+
+# for i in kik:
+#     print(i)
+
+# response = []
+# for k in Match.select().group_by(Match.NameKomandaHozMatch):
+#     komHoz = str(k.NameKomandaHozMatch.Naimenovanie)
 #
+#     response.append(komHoz)
+#
+# print(response)
+
+
+#
+# selectWinTeam = Match.select().group_by(Match).having(Match.StatusMatch == 'Завершен')
+# winTeam = []
+# for i in selectWinTeam:
+#     winTeam.append(i.NameKomandaHozMatch.Naimenovanie)
+# print(winTeam)
+#
+# groupTeam = Match.select().group_by(Match.NameKomandaHozMatch)
+#
+# j = 0
+# response = []
+# response2 = [0]*groupTeam.count()
+# for k in groupTeam:
+#     komHoz = str(k.NameKomandaHozMatch.Naimenovanie)
+#     print(komHoz)
+#     response.append(komHoz)
+#     for i in range(len(winTeam)):
+#         if winTeam[i] == komHoz:
+#             response2[j]+=1
+#     j+=1
+#
+# print(response2)
+
+
+
+# lol= []
+# for i in kek:
+#     lol.append(i.NameKomandaHozMatch.Naimenovanie)
+# print(lol)
+#
+# for k in lol:
+#     print(k)
+#
+# result = {i: lol.count(i) for i in lol}
+#
+# print(list(result.values()))
+
+
+
+# test2 = []
+# test = Match.select().where(Match.NameKomandaHozMatch == lol[1])
+# print(str(lol[1]))
+# for i in test:
+#     test1 = Match.select().where(Match.NameKomandaHozMatch == lol[1]).count()
+#     test2.append(test1.NameKomandaHozMatch.Naimenovanie)
+#     print(test2)
+
 # input_Match()
 # input_Gorod()
 # input_Sudiya()

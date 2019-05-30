@@ -67,6 +67,7 @@ Vue.component('table-matches', {
         </v-card>
       </v-dialog>
     </v-toolbar>
+    <v-alert :value="alert" type="error" > Выбранными вами судья не имеет права судить матч, который из того-же города что и одна из команд</v-alert>
     <v-data-table :headers="headers" :items="matches" hide-actions class="elevation-1 mt-2" >
       <template v-slot:items="props">
         <td>{{ props.item.id }}</td>
@@ -80,7 +81,7 @@ Vue.component('table-matches', {
         <td>{{ props.item.Stat }}</td>
         <td class=" layout px-0">
           <v-icon small class="mr-2" @click="editItem(props.item)" > edit </v-icon>
-          <v-icon small class="mr-2" @click="deleteItem(props.item)" > delete </v-icon>
+          <!--<v-icon small class="mr-2" @click="deleteItem(props.item)" > delete </v-icon>-->
           <v-dialog v-model="dialogFC" max-width="550px">
             <template v-slot:activator="{ on }">
               <v-icon small class="mr-2" @click="change(props.item)"> error </v-icon>
@@ -134,6 +135,7 @@ Vue.component('table-matches', {
   </div>
   `,
   data: () => ({
+      alert: false,
       dialog: false,
       dialogFC: false,
       headers: [
@@ -143,7 +145,7 @@ Vue.component('table-matches', {
           sortable: false,
           value: 'name'
         },
-        { text: 'Город', value: 'NameGorod', sortable: false },
+          { text: 'Город', value: 'NameGorod', sortable: false },
         { text: 'Хозяин', value: 'Hoz', sortable: false },
         { text: 'Гость', value: 'Gos', sortable: false },
         { text: 'Судья', value: 'Sud', sortable: false },
@@ -189,7 +191,7 @@ Vue.component('table-matches', {
     }),
     computed: {
       formTitle () {
-        return this.editedIndex === -1 ? 'Добавить матч' : 'Изменить матч'
+        return this.editedIndex === -1 ? 'Добавить матч' : 'Изменить матч. Возможно изменение только Судьи и Результат матча'
       }
     },
 
@@ -220,11 +222,9 @@ Vue.component('table-matches', {
             var data = JSON.parse(json_s)
             for (var i = 0; i < data.meth.length; i++){
               self.matches.push(data.meth[i]);
-              console.log(self.matches[i])
             }
           }
         }
-        console.log(self.matches)
         xhr.send()
       },
       initializeGorodMatch(){
@@ -242,7 +242,6 @@ Vue.component('table-matches', {
             }
           }
         }
-        // console.log(self.cities)
         xhr.send()
       },
       initializeHozMatch(){
@@ -260,7 +259,6 @@ Vue.component('table-matches', {
             }
           }
         }
-        // console.log(self.cities)
         xhr.send()
       },
       initializeGosMatch(){
@@ -278,7 +276,6 @@ Vue.component('table-matches', {
             }
           }
         }
-        // console.log(self.cities)
         xhr.send()
       },
       initializeSudMatch(){
@@ -296,7 +293,6 @@ Vue.component('table-matches', {
             }
           }
         }
-        // console.log(self.cities)
         xhr.send()
       },
 
@@ -306,28 +302,28 @@ Vue.component('table-matches', {
         this.dialog = true
       },
 
-      deleteItem (item) {
-        const index = this.matches.indexOf(item)
-        var xhr = new XMLHttpRequest();
-        var self = this;
-        data = {
-          m_id: index + 1,
-        }
-        data_s = JSON.stringify(data)
-        xhr.withCredentials = true;
-        xhr.open('POST', '/delete_match', true)
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.onreadystatechange= function(){
-          if (this.readyState == 4){
-            var json_s = this.responseText
-            var data = JSON.parse(json_s)
-            confirm('Вы действительно хотите удалить этот матч?') && self.matches.splice(index, 1)
-          }
-        }
-        console.log(data_s)
-        xhr.send(data_s)
-
-      },
+      // deleteItem (item) {
+      //   const index = this.matches.indexOf(item)
+      //   var xhr = new XMLHttpRequest();
+      //   var self = this;
+      //   data = {
+      //     m_id: index + 1,
+      //   }
+      //   data_s = JSON.stringify(data)
+      //   xhr.withCredentials = true;
+      //   xhr.open('POST', '/delete_match', true)
+      //   xhr.setRequestHeader('Content-Type', 'application/json');
+      //   xhr.onreadystatechange= function(){
+      //     if (this.readyState == 4){
+      //       var json_s = this.responseText
+      //       var data = JSON.parse(json_s)
+      //       confirm('Вы действительно хотите удалить этот матч?') && self.matches.splice(index, 1)
+      //     }
+      //   }
+      //   console.log(data_s)
+      //   xhr.send(data_s)
+      //
+      // },
 
       close () {
         this.dialog = false
@@ -356,10 +352,14 @@ Vue.component('table-matches', {
             if (this.readyState == 4){
               var json_s = this.responseText
               var data = JSON.parse(json_s)
-              Object.assign(this.matches[self.editedIndex], self.editedItem)
+              if (data.code == '1'){
+                self.alert = true
+              }
+              else{
+                Object.assign(self.matches[self.editedIndex], self.editedItem)
+              }
             }
           }
-          console.log(data_s)
           xhr.send(data_s)
         } else {
           var xhr = new XMLHttpRequest();
@@ -383,13 +383,19 @@ Vue.component('table-matches', {
             if (this.readyState == 4){
               var json_s = this.responseText
               var data = JSON.parse(json_s)
-              self.matches.push(self.editedItem)
+              if (data.code == '2'){
+                self.alert = true
+              }
+              else if (data.code == '1'){
+                alert('ошибка ввода (вы выбрали "гостя" и "хозяина" как одну команду)')
+              }
+              else{
+                self.matches.push(self.editedItem)
+              }
             }
           }
-          console.log(data_s)
           xhr.send(data_s)
         }
-
         this.close()
       },
       change(item){
@@ -421,7 +427,6 @@ Vue.component('table-matches', {
             Object.assign(self.matches  [self.editedIndex], self.editedItem)
           }
         }
-        console.log(data_s)
         xhr.send(data_s)
       }
     }
@@ -463,8 +468,8 @@ Vue.component('table-teams', {
 
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn color="blue darken-1" flat @click="close">Cancel</v-btn>
-              <v-btn color="blue darken-1" flat @click="save">Save</v-btn>
+              <v-btn color="blue darken-1" flat @click="close">Отмена</v-btn>
+              <v-btn color="blue darken-1" flat @click="save">Сохранить</v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
@@ -475,19 +480,8 @@ Vue.component('table-teams', {
           <td>{{ props.item.NameTeam }}</td>
           <td>{{ props.item.NameGorod }}</td>
           <td class=" layout px-0">
-            <v-icon
-              small
-              class="mr-2"
-              @click="editItem(props.item)"
-            >
-              edit
-            </v-icon>
-            <v-icon
-              small
-              @click="deleteItem(props.item)"
-            >
-              delete
-            </v-icon>
+            <v-icon small class="mr-2" @click="editItem(props.item)" > edit </v-icon>
+            <!--<v-icon small @click="deleteItem(props.item)" > delete </v-icon>-->
           </td>
         </template>
       </v-data-table>
@@ -556,30 +550,7 @@ Vue.component('table-teams', {
               }
             }
           }
-          // console.log(self.cities)
           xhr.send()
-          // this.teams = [
-          //   {
-          //     id: 1,
-          //     NameTeam: 'ЦСКА',
-          //     NameGorod: 'Москва',
-          //   },
-          //   {
-          //     id: 2,
-          //     NameTeam: 'УНИКС',
-          //     NameGorod: 'Питер',
-          //   },
-          //   {
-          //     id: 3,
-          //     NameTeam: 'Альба',
-          //     NameGorod: 'Казань',
-          //   },
-          //   {
-          //     id: 4,
-          //     NameTeam: 'Валенсия',
-          //     NameGorod: 'Ярославль',
-          //   }
-          // ]
         },
         initializeGorodKomanda() {
           var xhr = new XMLHttpRequest();
@@ -596,38 +567,35 @@ Vue.component('table-teams', {
               }
             }
           }
-          // console.log(self.cities)
           xhr.send()
         },
 
         editItem (item) {
           this.editedIndex = this.teams.indexOf(item)
-          alert('edit')
           this.editedItem = Object.assign({}, item)
           this.dialog = true
         },
 
-        deleteItem (item) {
-          const index = this.teams.indexOf(item)
-          var xhr = new XMLHttpRequest();
-          var self = this;
-          data = {
-            s_id: index + 1,
-          }
-          data_s = JSON.stringify(data)
-          xhr.withCredentials = true;
-          xhr.open('POST', '/delete_comanda', true)
-          xhr.setRequestHeader('Content-Type', 'application/json');
-          xhr.onreadystatechange= function(){
-            if (this.readyState == 4){
-              var json_s = this.responseText
-              var data = JSON.parse(json_s)
-              confirm('Вы действительно хотите удалить эту команду?') && self.teams.splice(index, 1)
-            }
-          }
-          console.log(data_s)
-          xhr.send(data_s)
-        },
+        // deleteItem (item) {
+        //   const index = this.teams.indexOf(item)
+        //   var xhr = new XMLHttpRequest();
+        //   var self = this;
+        //   data = {
+        //     s_id: index + 1,
+        //   }
+        //   data_s = JSON.stringify(data)
+        //   xhr.withCredentials = true;
+        //   xhr.open('POST', '/delete_comanda', true)
+        //   xhr.setRequestHeader('Content-Type', 'application/json');
+        //   xhr.onreadystatechange= function(){
+        //     if (this.readyState == 4){
+        //       var json_s = this.responseText
+        //       var data = JSON.parse(json_s)
+        //       confirm('Вы действительно хотите удалить эту команду?') && self.teams.splice(index, 1)
+        //     }
+        //   }
+        //   xhr.send(data_s)
+        // },
 
         close () {
           this.dialog = false
@@ -660,7 +628,6 @@ Vue.component('table-teams', {
             console.log(data_s)
             xhr.send(data_s)
           } else {
-            alert('pushing')
             var xhr = new XMLHttpRequest();
             var self = this;
             data = {
@@ -723,8 +690,8 @@ Vue.component('table-referee', {
 
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn color="blue darken-1" flat @click="close">Cancel</v-btn>
-              <v-btn color="blue darken-1" flat @click="save">Save</v-btn>
+              <v-btn color="blue darken-1" flat @click="close">Отмена</v-btn>
+              <v-btn color="blue darken-1" flat @click="save">Сохранить</v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
@@ -735,19 +702,8 @@ Vue.component('table-referee', {
           <td>{{ props.item.NameReferee }}</td>
           <td>{{ props.item.NameGorod }}</td>
           <td class=" layout px-0">
-            <v-icon
-              small
-              class="mr-2"
-              @click="editItem(props.item)"
-            >
-              edit
-            </v-icon>
-            <v-icon
-              small
-              @click="deleteItem(props.item)"
-            >
-              delete
-            </v-icon>
+            <v-icon small class="mr-2" @click="editItem(props.item)" > edit </v-icon>
+            <!-- <v-icon small @click="deleteItem(props.item)" > delete </v-icon> -->
           </td>
         </template>
       </v-data-table>
@@ -816,7 +772,6 @@ Vue.component('table-referee', {
               }
             }
           }
-          // console.log(self.cities)
           xhr.send()
         },
         initializeGorodSudia() {
@@ -834,38 +789,33 @@ Vue.component('table-referee', {
               }
             }
           }
-          // console.log(self.cities)
           xhr.send()
         },
-
         editItem (item) {
           this.editedIndex = this.sudii.indexOf(item)
-          alert('edit')
           this.editedItem = Object.assign({}, item)
           this.dialog = true
         },
-
-        deleteItem (item) {
-          const index = this.sudii.indexOf(item)
-          var xhr = new XMLHttpRequest();
-          var self = this;
-          data = {
-            s_id: index + 1,
-          }
-          data_s = JSON.stringify(data)
-          xhr.withCredentials = true;
-          xhr.open('POST', '/delete_sudia', true)
-          xhr.setRequestHeader('Content-Type', 'application/json');
-          xhr.onreadystatechange= function(){
-            if (this.readyState == 4){
-              var json_s = this.responseText
-              var data = JSON.parse(json_s)
-              confirm('Вы действительно хотите удалить этого судью?') && self.sudii.splice(index, 1)
-            }
-          }
-          console.log(data_s)
-          xhr.send(data_s)
-        },
+        // deleteItem (item) {
+        //   const index = this.sudii.indexOf(item)
+        //   var xhr = new XMLHttpRequest();
+        //   var self = this;
+        //   data = {
+        //     s_id: index + 1,
+        //   }
+        //   data_s = JSON.stringify(data)
+        //   xhr.withCredentials = true;
+        //   xhr.open('POST', '/delete_sudia', true)
+        //   xhr.setRequestHeader('Content-Type', 'application/json');
+        //   xhr.onreadystatechange= function(){
+        //     if (this.readyState == 4){
+        //       var json_s = this.responseText
+        //       var data = JSON.parse(json_s)
+        //       confirm('Вы действительно хотите удалить этого судью?') && self.sudii.splice(index, 1)
+        //     }
+        //   }
+        //   xhr.send(data_s)
+        // },
 
         close () {
           this.dialog = false
@@ -957,8 +907,8 @@ Vue.component('table-city', {
 
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn color="blue darken-1" flat @click="close">Cancel</v-btn>
-              <v-btn color="blue darken-1" flat @click="save">Save</v-btn>
+              <v-btn color="blue darken-1" flat @click="close">Отмена</v-btn>
+              <v-btn color="blue darken-1" flat @click="save">Сохранить</v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
@@ -968,19 +918,8 @@ Vue.component('table-city', {
           <td>{{ props.item.id }}</td>
           <td>{{ props.item.NameGorod }}</td>
           <td class=" layout px-0">
-            <v-icon
-              small
-              class="mr-2"
-              @click="editItem(props.item)"
-            >
-              edit
-            </v-icon>
-            <v-icon
-              small
-              @click="deleteItem(props.item)"
-            >
-              delete
-            </v-icon>
+            <v-icon small class="mr-2" @click="editItem(props.item)" > edit </v-icon>
+            <!-- <v-icon small @click="deleteItem(props.item)" > delete </v-icon> -->
           </td>
         </template>
       </v-data-table>
@@ -1011,7 +950,7 @@ Vue.component('table-city', {
       }),
       computed: {
         formTitle () {
-          return this.editedIndex === -1 ? 'Добавить город' : 'Изменить судью'
+          return this.editedIndex === -1 ? 'Добавить город' : 'Изменить город'
         }
       },
 
@@ -1041,37 +980,33 @@ Vue.component('table-city', {
               }
             }
           }
-          // console.log(self.cities)
           xhr.send()
         },
         editItem (item) {
           this.editedIndex = this.goroda.indexOf(item)
-          alert('edit')
           this.editedItem = Object.assign({}, item)
           this.dialog = true
         },
-
-        deleteItem (item) {
-          const index = this.goroda.indexOf(item)
-          var xhr = new XMLHttpRequest();
-          var self = this;
-          data = {
-            s_id: index + 1,
-          }
-          data_s = JSON.stringify(data)
-          xhr.withCredentials = true;
-          xhr.open('POST', '/delete_gorod', true)
-          xhr.setRequestHeader('Content-Type', 'application/json');
-          xhr.onreadystatechange= function(){
-            if (this.readyState == 4){
-              var json_s = this.responseText
-              var data = JSON.parse(json_s)
-              confirm('Вы действительно хотите удалить этот город?') && self.goroda.splice(index, 1)
-            }
-          }
-          console.log(data_s)
-          xhr.send(data_s)
-        },
+        // deleteItem (item) {
+        //   const index = this.goroda.indexOf(item)
+        //   var xhr = new XMLHttpRequest();
+        //   var self = this;
+        //   data = {
+        //     s_id: index + 1,
+        //   }
+        //   data_s = JSON.stringify(data)
+        //   xhr.withCredentials = true;
+        //   xhr.open('POST', '/delete_gorod', true)
+        //   xhr.setRequestHeader('Content-Type', 'application/json');
+        //   xhr.onreadystatechange= function(){
+        //     if (this.readyState == 4){
+        //       var json_s = this.responseText
+        //       var data = JSON.parse(json_s)
+        //       confirm('Вы действительно хотите удалить этот город?') && self.goroda.splice(index, 1)
+        //     }
+        //   }
+        //   xhr.send(data_s)
+        // },
 
         close () {
           this.dialog = false
@@ -1100,10 +1035,8 @@ Vue.component('table-city', {
                 Object.assign(self.goroda[self.editedIndex], self.editedItem)
               }
             }
-            console.log(data_s)
             xhr.send(data_s)
           } else {
-            alert('pushing')
             var xhr = new XMLHttpRequest();
             var self = this;
             data = {
@@ -1121,7 +1054,6 @@ Vue.component('table-city', {
                 self.goroda.push(self.editedItem)
               }
             }
-            console.log(data_s)
             xhr.send(data_s)
           }
           this.close()
@@ -1129,7 +1061,7 @@ Vue.component('table-city', {
       }
 })
 
-Vue.component('home-page', {
+Vue.component('admin-panel', {
   template: `
   <v-container style="background: white">
     <table-matches></table-matches>
@@ -1198,14 +1130,13 @@ Vue.component('sign-in', {
           var json_s = this.responseText
           var data = JSON.parse(json_s)
           if (data.code == '0'){
-            self.$router.push('/home_page')
+            self.$router.push('/admin_panel')
           }
           else{
             self.alert = true;
           }
         }
       }
-      console.log(data_s)
       xhr.send(data_s)
     },
     emailInputText() {
@@ -1225,15 +1156,15 @@ Vue.component('table-matches-start', {
     </v-toolbar>
     <v-data-table dark :headers="headers" :items="matches" hide-actions class="elevation-1 mt-2" >
       <template v-slot:items="props">
-        <td>{{ props.item.id }}</td>
-        <td>{{ props.item.NameGorod }}</td>
-        <td>{{ props.item.Hoz }}</td>
-        <td>{{ props.item.Gos }}</td>
-        <td>{{ props.item.Sud }}</td>
-        <td>{{ props.item.Dat }}</td>
-        <td>{{ props.item.RezH }}</td>
-        <td>{{ props.item.RezG }}</td>
-        <td>{{ props.item.Stat }}</td>
+        <td style="padding: 0 0 0 24px">{{ props.item.id }}</td>
+        <td style="padding: 0 0 0 24px">{{ props.item.NameGorod }}</td>
+        <td style="padding: 0 0 0 24px">{{ props.item.Hoz }}</td>
+        <td style="padding: 0 0 0 24px">{{ props.item.Gos }}</td>
+        <td style="padding: 0 0 0 24px">{{ props.item.Sud }}</td>
+        <td style="padding: 0 0 0 24px">{{ props.item.Dat }}</td>
+        <td style="padding: 0 0 0 24px">{{ props.item.RezH }}</td>
+        <td style="padding: 0 0 0 24px">{{ props.item.RezG }}</td>
+        <td style="padding: 0 0 0 24px">{{ props.item.Stat }}</td>
       </template>
     </v-data-table>
   </div>
@@ -1282,7 +1213,6 @@ Vue.component('table-matches-start', {
             var data = JSON.parse(json_s)
             for (var i = 0; i < data.meth.length; i++){
               self.matches.push(data.meth[i]);
-              console.log(self.matches[i])
             }
           }
         }
@@ -1496,7 +1426,6 @@ Vue.component('table-referee-start', {
             }
           }
         }
-        // console.log(self.cities)
         xhr.send()
       },
     }
@@ -1548,152 +1477,9 @@ Vue.component('table-city-start', {
           }
         }
       }
-      // console.log(self.cities)
       xhr.send()
     },
   }
-})
-
-Vue.component('table-matches-start-stat', {
-  template: `
-  <div>
-    <v-toolbar flat color="white">
-      <v-toolbar-title>Матчи заданные:</v-toolbar-title>
-    </v-toolbar>
-    <v-data-table dark :headers="headers" :items="matches" hide-actions class="elevation-1 mt-2" >
-      <template v-slot:items="props">
-        <td>{{ props.item.id }}</td>
-        <td>{{ props.item.NameGorod }}</td>
-        <td>{{ props.item.Hoz }}</td>
-        <td>{{ props.item.Gos }}</td>
-        <td>{{ props.item.Sud }}</td>
-        <td>{{ props.item.Dat }}</td>
-        <td>{{ props.item.RezH }}</td>
-        <td>{{ props.item.RezG }}</td>
-        <td>{{ props.item.Stat }}</td>
-      </template>
-    </v-data-table>
-  </div>
-  `,
-  data: () => ({
-      headers: [
-        {
-          text: '№',
-          align: 'left',
-          sortable: false,
-          value: 'name'
-        },
-        { text: 'Город', value: 'NameGorod', sortable: false },
-        { text: 'Хозяин', value: 'Hoz', sortable: false },
-        { text: 'Гость', value: 'Gos', sortable: false },
-        { text: 'Судья', value: 'Sud', sortable: false },
-        { text: 'Дата', value: 'Dat', sortable: false },
-        { text: 'Рез. Хоз.', value: 'RezH', sortable: false },
-        { text: 'Рез. Гос.', value: 'RezG', sortable: false },
-        { text: 'Статус', value: 'Stat', sortable: false }
-      ],
-      matches: [],
-      cities: [],
-      HozMatch: [],
-      GosMatch: [],
-      SudMatch: [],
-    }),
-    created () {
-      this.initializeTableMatch()
-      this.initializeGorodMatch()
-      this.initializeHozMatch()
-      this.initializeGosMatch()
-      this.initializeSudMatch()
-    },
-
-    methods: {
-      initializeTableMatch() {
-        var xhr = new XMLHttpRequest();
-        var self = this;
-        xhr.withCredentials = true;
-        xhr.open('GET', '/initializeTableMatch', true)
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.onreadystatechange= function(){
-          if (this.readyState == 4){
-            var json_s = this.responseText
-            var data = JSON.parse(json_s)
-            for (var i = 0; i < data.meth.length; i++){
-              self.matches.push(data.meth[i]);
-              console.log(self.matches[i])
-            }
-          }
-        }
-        xhr.send()
-      },
-      initializeGorodMatch(){
-        var xhr = new XMLHttpRequest();
-        var self = this;
-        xhr.withCredentials = true;
-        xhr.open('GET', '/initializeGorodMatch', true)
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.onreadystatechange= function(){
-          if (this.readyState == 4){
-            var json_s = this.responseText
-            var data = JSON.parse(json_s)
-            for (var g = 0; g < data.meth.length; g++){
-              self.cities.push(data.meth[g])
-            }
-          }
-        }
-        xhr.send()
-      },
-      initializeHozMatch(){
-        var xhr = new XMLHttpRequest();
-        var self = this;
-        xhr.withCredentials = true;
-        xhr.open('GET', '/initializeHozMatch', true)
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.onreadystatechange= function(){
-          if (this.readyState == 4){
-            var json_s = this.responseText
-            var data = JSON.parse(json_s)
-            for (var g = 0; g < data.meth.length; g++){
-              self.HozMatch.push(data.meth[g])
-            }
-          }
-        }
-        xhr.send()
-      },
-      initializeGosMatch(){
-        var xhr = new XMLHttpRequest();
-        var self = this;
-        xhr.withCredentials = true;
-        xhr.open('GET', '/initializeGosMatch', true)
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.onreadystatechange= function(){
-          if (this.readyState == 4){
-            var json_s = this.responseText
-            var data = JSON.parse(json_s)
-            for (var g = 0; g < data.meth.length; g++){
-              self.GosMatch.push(data.meth[g])
-            }
-          }
-        }
-        xhr.send()
-      },
-      initializeSudMatch(){
-        var xhr = new XMLHttpRequest();
-        var self = this;
-        xhr.withCredentials = true;
-        xhr.open('GET', '/initializeSudMatch', true)
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.onreadystatechange= function(){
-          if (this.readyState == 4){
-            var json_s = this.responseText
-            var data = JSON.parse(json_s)
-            for (var g = 0; g < data.meth.length; g++){
-              self.SudMatch.push(data.meth[g])
-            }
-          }
-        }
-        xhr.send()
-      },
-    }
 })
 
 Vue.component('start-page', {
@@ -1701,6 +1487,7 @@ Vue.component('start-page', {
   <div style="background: white">
     <v-toolbar dark>
       <v-toolbar-title><v-btn flat @click="$vuetify.goTo('#tables', {duration: 1000})" small>Таблицы</v-btn></v-toolbar-title>
+      <v-toolbar-title><v-btn flat @click="$vuetify.goTo('#sprav', {duration: 1000})" small>Справки</v-btn></v-toolbar-title>
       <v-toolbar-title><v-btn flat @click="$vuetify.goTo('#stat', {duration: 1000})" small>Статистика</v-btn></v-toolbar-title>
       <v-spacer></v-spacer>
       <v-toolbar-items class="hidden-sm-and-down">
@@ -1743,8 +1530,8 @@ Vue.component('start-page', {
       </v-container>
     </div>
     <div>
-      <v-container  id="stat" >
-        <h1 style="text-align: center" class="mt-5">Статистика</h1>
+      <v-container  id="sprav">
+        <h1 style="text-align: center" class="mt-5">Справки</h1>
         <v-divider inset class="mt-3"></v-divider>
 
         <v-flex class="mt-5">
@@ -1800,8 +1587,65 @@ Vue.component('start-page', {
         </v-layout>
       </v-container>
     </div>
+
+    <div>
+      <v-container  id="stat">
+        <h1 style="text-align: center" class="mt-5">Статистика</h1>
+        <v-divider inset class="mt-3"></v-divider>
+        <v-layout>
+          <template>
+            <v-card class="mt-5 mx-auto text-xs-center"  dark width="550px">
+              <v-card-text>
+                <v-sheet color="rgba(0, 0, 0, .12)">
+                  <v-sparkline
+                    :labels="StatHozlabels"
+                    :value="StatHozValues"
+                    color="rgba(255, 255, 255, .7)"
+                    height="100"
+                    padding="20"
+                    stroke-linecap="round"
+                  >
+                  </v-sparkline>
+                </v-sheet>
+              </v-card-text>
+
+              <v-divider></v-divider>
+
+              <v-card-text>
+                <div class="">статистика побед команд хозяинов</div>
+              </v-card-text>
+            </v-card>
+          </template>
+
+          <template>
+            <v-card class="mt-5 mx-auto text-xs-center"  dark width="550px">
+              <v-card-text>
+                  <v-sheet color="rgba(0, 0, 0, .12)">
+                    <v-sparkline
+                      :labels="StatGoslabels"
+                      :value="StatGosValues"
+                      color="rgba(255, 255, 255, .7)"
+                      height="100"
+                      padding="20"
+                      stroke-linecap="round"
+                    >
+                    </v-sparkline>
+                  </v-sheet>
+              </v-card-text>
+
+              <v-divider></v-divider>
+
+              <v-card-text>
+                <div class="">статистика побед команд гостей</div>
+              </v-card-text>
+            </v-card>
+          </template>
+        </v-layout>
+      </v-container>
+    </div>
+
     <template>
-    <v-footer style="margin-top: 200px;width:100%; height:100%" dark  >
+    <v-footer style="margin-top: 100px;width:100%; height:100%" dark  >
       <v-card style="margin: 0 auto; background: #212121" flat tile class="white--text text-xs-center" >
 
         <v-card-text class="white--text mt-2">
@@ -1809,7 +1653,7 @@ Vue.component('start-page', {
         </v-card-text>
 
         <v-card-text class="mb-0 pb-0 pt-0">
-          <p >Ссылка на Githab:<v-btn class="mx-3 white--text" icon ><v-icon size="14px">fa-code-branch</v-icon></v-btn></p>
+          <p >Ссылка на Githab:<v-btn href="https://github.com/kamych1916/ZadorinaDB" class="mx-3 white--text" icon ><v-icon size="14px">fa-code-branch</v-icon></v-btn></p>
         </v-card-text>
 
         <v-divider></v-divider>
@@ -1823,6 +1667,10 @@ Vue.component('start-page', {
   </div>
   `,
     data: () => ({
+      StatHozlabels: [],
+      StatGoslabels: [],
+      StatHozValues: [],
+      StatGosValues: [],
       headers: [
         {
           text: '№',
@@ -1850,8 +1698,56 @@ Vue.component('start-page', {
       this.initializeTeams()
       this.initializeSudii()
       this.initializeDate()
+
+      this.showStatTeamHoz()
+      this.showStatTeamGos()
+
     },
     methods: {
+      //СТАТИСТИКА
+      showStatTeamHoz(){
+        var xhr = new XMLHttpRequest();
+        var self = this;
+        xhr.withCredentials = true;
+        xhr.open('GET', '/initializeTeamsHozStatDate', true)
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.onreadystatechange= function(){
+          if (this.readyState == 4){
+            var json_s = this.responseText
+            var data = JSON.parse(json_s)
+            for (var i = 0; i < data.meth.length; i++){
+              self.StatHozlabels.push(data.meth[i]);
+            }
+            for (var i = 0; i < data.meth1.length; i++){
+              self.StatHozValues.push(data.meth1[i])
+            }
+          }
+        }
+        xhr.send()
+      },
+      showStatTeamGos(){
+        var xhr = new XMLHttpRequest();
+        var self = this;
+        xhr.withCredentials = true;
+        xhr.open('GET', '/initializeTeamsGosStatDate', true)
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.onreadystatechange= function(){
+          if (this.readyState == 4){
+            var json_s = this.responseText
+            var data = JSON.parse(json_s)
+            for (var i = 0; i < data.meth.length; i++){
+              self.StatGoslabels.push(data.meth[i]);
+            }
+            for (var i = 0; i < data.meth1.length; i++){
+              self.StatGosValues.push(data.meth1[i])
+            }
+          }
+        }
+        xhr.send()
+      },
+      //СТАТИСТИКА
+
+      //СПРАВКИ
       getStatKomanda(){
         var xhr = new XMLHttpRequest();
         var self = this;
@@ -1861,7 +1757,7 @@ Vue.component('start-page', {
         }
         console.log(this.matches)
         data_s = JSON.stringify(data)
-        xhr.open('POST', '/initializeTableMatchStatKomanda', true)
+        xhr.open('POST', '/initializeTableMatchInfoKomanda', true)
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.onreadystatechange= function(){
           if (this.readyState == 4){
@@ -1888,7 +1784,7 @@ Vue.component('start-page', {
         }
         console.log(this.matches.NameGorod)
         data_s = JSON.stringify(data)
-        xhr.open('POST', '/initializeTableMatchStatGorod', true)
+        xhr.open('POST', '/initializeTableMatchInfoGorod', true)
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.onreadystatechange= function(){
           if (this.readyState == 4){
@@ -1915,7 +1811,7 @@ Vue.component('start-page', {
         }
         console.log(this.matches.NameSud)
         data_s = JSON.stringify(data)
-        xhr.open('POST', '/initializeTableMatchStatSud', true)
+        xhr.open('POST', '/initializeTableMatchInfoSud', true)
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.onreadystatechange= function(){
           if (this.readyState == 4){
@@ -1942,7 +1838,7 @@ Vue.component('start-page', {
         }
         console.log(this.matches.NameDate)
         data_s = JSON.stringify(data)
-        xhr.open('POST', '/initializeTableMatchStatDate', true)
+        xhr.open('POST', '/initializeTableMatchInfoDate', true)
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.onreadystatechange= function(){
           if (this.readyState == 4){
@@ -1960,7 +1856,9 @@ Vue.component('start-page', {
         }
         xhr.send(data_s)
       },
+      //СПРАВКИ
 
+      //ОТОБРАЖЕНИЕ ТАБЛИЦ
       initializeTeams() {
         var xhr = new XMLHttpRequest();
         var self = this;
@@ -2029,6 +1927,9 @@ Vue.component('start-page', {
         }
         xhr.send()
       },
+      //ОТОБРАЖЕНИЕ ТАБЛИЦ
+
+      //ПЕРЕХОД НА СТРАНИЦУ АВТОРИЗАЦИИ
       go_to_sign_in(){
         self.router.push('/sign_in')
       }
@@ -2037,17 +1938,17 @@ Vue.component('start-page', {
 })
 
 const SignIn = { template: '<sign-in></sign-in>' }
-const Options = { template: '<home-page></home-page>' }
+const Options = { template: '<admin-panel></admin-panel>' }
 const StartPage = { template: '<start-page></start-page>' }
 
 const routes = [
   { path: '/sign_in', component: SignIn },
-  { path: '/home_page', component: Options },
+  { path: '/admin_panel', component: Options },
   { path: '/', component: StartPage },
 ]
 
 var router = new VueRouter({
-  mode: 'history',
+  // mode: 'history',
   routes
 })
 
