@@ -431,7 +431,6 @@ Vue.component('table-matches', {
       }
     }
 })
-
 Vue.component('table-teams', {
     template: `
     <v-flex class="md5 mt-5">
@@ -1946,7 +1945,6 @@ const routes = [
   { path: '/admin_panel', component: Options },
   { path: '/', component: StartPage },
 ]
-
 var router = new VueRouter({
   // mode: 'history',
   routes

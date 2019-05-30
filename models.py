@@ -156,13 +156,6 @@ db.create_tables([Gorod, Sudiya, Komanda, Match, Admin], safe=True)
 
 
 
-# test2 = []
-# test = Match.select().where(Match.NameKomandaHozMatch == lol[1])
-# print(str(lol[1]))
-# for i in test:
-#     test1 = Match.select().where(Match.NameKomandaHozMatch == lol[1]).count()
-#     test2.append(test1.NameKomandaHozMatch.Naimenovanie)
-#     print(test2)
 
 # input_Match()
 # input_Gorod()
