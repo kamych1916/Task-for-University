@@ -1,4 +1,4 @@
-# Task for University - Basketball Match
+# Task for University - Basketball Сhampionship
 
 
 I'm using Flask web-framework in back-end, and Vue/Vuetify in front-end
